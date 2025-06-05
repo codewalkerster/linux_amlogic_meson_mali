@@ -109,6 +109,16 @@ LOCAL_MODULE_PATH_32 := $(TARGET_OUT)/lib/egl
 LOCAL_MODULE_PATH_64 := $(TARGET_OUT)/lib64/egl
 endif
 
+FRAMEWORK_BASE_DIR := $(TOP)/frameworks/base
+COMMIT_CHECK := $(shell cd $(FRAMEWORK_BASE_DIR) && git log --oneline | grep -m1 e6eaac80)
+
+# check if the commits related to framework upgrades in the git log of frameworks/base.
+ifneq (,$(COMMIT_CHECK))
+    BOARD_VERSION := -v5
+endif
+
+#When it comes to Android U, it's necessary to distinguish between common-V4-ndk and common-V5-ndk.
+ifeq ($(TARGET),mali450_ion)
 ifeq ($(TARGET_2ND_ARCH),)
 ifneq ($(ANDROID_BUILD_TYPE), 64)
 LOCAL_SRC_FILES    	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
@@ -118,6 +128,35 @@ endif
 else
 LOCAL_SRC_FILES_32       := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
 LOCAL_SRC_FILES_64	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_64-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
+endif
+else
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -eq 34 && echo OK),OK)
+ifeq ($(TARGET_2ND_ARCH),)
+ifneq ($(ANDROID_BUILD_TYPE), 64)
+LOCAL_SRC_FILES    	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL)$(BOARD_VERSION).so
+else
+LOCAL_SRC_FILES_64	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_64-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL)$(BOARD_VERSION).so
+endif
+else
+LOCAL_SRC_FILES_32   := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL)$(BOARD_VERSION).so
+LOCAL_SRC_FILES_64	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_64-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL)$(BOARD_VERSION).so
+endif
+endif
+
+ifneq ($(shell test $(PLATFORM_SDK_VERSION) -eq 34 && echo OK),OK)
+ifeq ($(TARGET_2ND_ARCH),)
+ifneq ($(ANDROID_BUILD_TYPE), 64)
+LOCAL_SRC_FILES    	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
+else
+LOCAL_SRC_FILES_64	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_64-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
+endif
+else
+LOCAL_SRC_FILES_32       := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_32-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
+LOCAL_SRC_FILES_64	 := $(TARGET)/libGLES_mali_$(GPU_TARGET_PLATFORM)_64-$(LOCAL_ANDROID_VERSION_NUM)$(GPU_USE_OPENCL).so
+endif
+endif
+
 endif
 
 #BOARD_INSTALL_VULKAN default is false
